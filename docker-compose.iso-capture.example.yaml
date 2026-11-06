@@ -1,0 +1,14 @@
+# Tambahkan service ini ke compose.yaml Odoo kamu (di samping service `odoo` dan `db`).
+# Teruskan juga variabel ISO_* dari .env.example ke service `odoo` (bagian environment).
+services:
+  iso-capture:
+    build:
+      context: ./iso_capture
+    environment:
+      ISO_CAPTURE_ODOO_URL: http://odoo:8069
+      ISO_CAPTURE_DB: ${ISO_CAPTURE_DB:-sales}
+      ISO_CAPTURE_LOGIN: ${ISO_CAPTURE_LOGIN:-}
+      ISO_CAPTURE_PASSWORD: ${ISO_CAPTURE_PASSWORD:-}
+    depends_on:
+      - odoo
+    restart: unless-stopped

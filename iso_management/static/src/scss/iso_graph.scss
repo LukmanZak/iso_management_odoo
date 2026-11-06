@@ -1,0 +1,39 @@
+.o_iso_graph {
+    --iso-covered: #2e7d32;
+    --iso-partial: #b7791f;
+    --iso-gap: #c0392b;
+    --iso-unscanned: #8a8f98;
+    --iso-direct: #2e7d32;
+    --iso-supporting: #b7791f;
+
+    .o_iso_svg { font-size: 12px; }
+    .o_iso_colhead { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; fill: #8a8f98; }
+    .o_iso_node { cursor: pointer; transition: opacity .12s; &.dim { opacity: .18; } }
+    .o_iso_app { cursor: default; }
+    .o_iso_link { stroke: #b8bec7; stroke-width: 1.2; transition: opacity .12s; &.dim { opacity: .12; } }
+    .o_iso_link_hierarchy { stroke: #d2d6dc; }
+    .o_iso_link_evidence { stroke: #6b8fb7; }
+    .o_iso_link_source { stroke: #c9c1a8; stroke-dasharray: 3 3; }
+    .o_iso_heading { font-weight: 600; }
+    .o_iso_card { fill: var(--bs-body-bg, #fff); stroke: #cfd4da; }
+    .o_iso_pill { fill: rgba(107, 143, 183, .12); stroke: #6b8fb7; }
+    .o_iso_score { fill: #6b7280; font-size: 11px; }
+    .o_iso_shot { font-size: 11px; }
+
+    .o_iso_covered .o_iso_mark { fill: var(--iso-covered); }
+    .o_iso_partial .o_iso_mark { fill: var(--iso-partial); }
+    .o_iso_gap .o_iso_mark { fill: var(--iso-gap); }
+    .o_iso_unscanned .o_iso_mark { fill: var(--iso-unscanned); }
+    .o_iso_direct .o_iso_card { stroke: var(--iso-direct); }
+    .o_iso_supporting .o_iso_card { stroke: var(--iso-supporting); stroke-dasharray: 4 2; }
+
+    .o_iso_chip {
+        border: 1px solid #d0d5dc;
+        .o_iso_dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
+        &.o_iso_covered .o_iso_dot { background: var(--iso-covered); }
+        &.o_iso_partial .o_iso_dot { background: var(--iso-partial); }
+        &.o_iso_gap .o_iso_dot { background: var(--iso-gap); }
+        &.o_iso_unscanned .o_iso_dot { background: var(--iso-unscanned); }
+        &.active { background: rgba(0, 0, 0, .06); font-weight: 600; }
+    }
+}

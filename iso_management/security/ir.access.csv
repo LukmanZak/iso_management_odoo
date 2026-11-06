@@ -1,0 +1,10 @@
+id,name,model_id,group_id/id,operation,domain
+access_iso_management_standard_user,ISO standard user,iso.management.standard,base.group_user,r,"[('company_id', 'in', company_ids)]"
+access_iso_management_standard_manager,ISO standard manager,iso.management.standard,iso_management.group_iso_management_manager,crud,"[('company_id', 'in', company_ids)]"
+access_iso_management_clause_user,ISO clause user,iso.management.clause,base.group_user,r,"[('company_id', 'in', company_ids)]"
+access_iso_management_scan_user,ISO scan user,iso.management.scan,base.group_user,cru,"[('company_id', 'in', company_ids)]"
+access_iso_management_evidence_user,ISO evidence user,iso.management.evidence,base.group_user,cr,"[('company_id', 'in', company_ids)]"
+access_iso_management_clause_manager,ISO clause manager,iso.management.clause,iso_management.group_iso_management_manager,crud,"[('company_id', 'in', company_ids)]"
+access_iso_management_scan_manager,ISO scan manager,iso.management.scan,iso_management.group_iso_management_manager,crud,"[('company_id', 'in', company_ids)]"
+access_iso_management_evidence_manager,ISO evidence manager,iso.management.evidence,iso_management.group_iso_management_manager,crud,"[('company_id', 'in', company_ids)]"
+access_iso_management_chunk_manager,ISO RAG chunk manager,iso.management.chunk,iso_management.group_iso_management_manager,r,

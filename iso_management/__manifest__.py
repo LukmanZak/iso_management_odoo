@@ -1,0 +1,27 @@
+{
+    "name": "ISO Management",
+    "summary": "ISO 14001:2015 clause-to-record mapping, evidence screenshots and relation graph",
+    "version": "20.0.7.0.0",
+    "author": "Local Odoo Customizations",
+    "category": "Operations/Quality",
+    "license": "LGPL-3",
+    "depends": ["base", "mail"],
+    "data": [
+        "security/iso_management_security.xml",
+        "security/ir.access.csv",
+        "views/iso_management_views.xml",
+        "report/iso_management_report.xml",
+        "data/catalog.xml",
+    ],
+    "post_init_hook": "post_init_hook",
+    "external_dependencies": {"python": ["requests"]},
+    "assets": {"web.assets_backend": [
+        "iso_management/static/src/js/progress.js",
+        "iso_management/static/src/xml/progress.xml",
+        "iso_management/static/src/js/iso_graph.js",
+        "iso_management/static/src/xml/iso_graph.xml",
+        "iso_management/static/src/scss/iso_graph.scss",
+    ]},
+    "application": True,
+    "installable": True,
+}

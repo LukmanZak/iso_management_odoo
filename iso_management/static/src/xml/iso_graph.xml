@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="iso_management.IsoGraph">
+        <div class="o_iso_graph d-flex flex-column h-100">
+            <div class="o_iso_graph_header d-flex flex-wrap align-items-center gap-2 p-3 border-bottom">
+                <h4 class="m-0 me-3"><t t-out="this.state.data and this.state.data.standard and this.state.data.standard.name or 'ISO Management'"/> graph</h4>
+                <t t-if="this.state.data">
+                    <button class="btn btn-sm" t-att-class="this.state.filter === 'all' ? 'btn-primary' : 'btn-outline-secondary'" t-on-click="() => this.setFilter('all')">All</button>
+                    <t t-foreach="['covered', 'partial', 'gap', 'unscanned']" t-as="key" t-key="key">
+                        <button class="btn btn-sm o_iso_chip" t-att-class="'o_iso_' + key + (this.state.filter === key ? ' active' : '')" t-on-click="() => this.setFilter(key)">
+                            <span class="o_iso_dot"/> <t t-out="this.statusLabels[key]"/> <b><t t-out="this.state.data.summary[key] or 0"/></b>
+                        </button>
+                    </t>
+                </t>
+                <span class="flex-grow-1"/>
+                <span t-if="this.state.running" class="badge text-bg-warning">Detection running…</span>
+                <button class="btn btn-sm btn-primary" t-on-click="() => this.runAll('rules')"><i class="fa fa-search"/> Auto-detect all</button>
+                <button class="btn btn-sm btn-outline-primary" t-on-click="() => this.runAll('rag')"><i class="fa fa-magic"/> Re-run with RAG</button>
+            </div>
+            <div t-if="this.state.data and this.state.data.rag" class="px-3 py-2 small text-muted border-bottom o_iso_rag_bar">
+                <i class="fa fa-database me-1"/>
+                <b>RAG &amp; AI:</b>
+                <t t-if="this.state.data.rag.ready">ready — pgvector index + LLM judge</t>
+                <t t-else="">not configured yet — results below come from the curated rules provider</t>
+            </div>
+            <div class="o_iso_graph_body flex-grow-1 overflow-auto p-3">
+                <div t-if="this.state.loading" class="text-muted">Loading…</div>
+                <div t-elif="!this.state.layout.clauses.length" class="text-muted">No clauses to show for this filter.</div>
+                <svg t-else="" t-att-width="1060" t-att-height="this.state.layout.height" class="o_iso_svg" role="img" aria-label="ISO clause to evidence graph">
+                    <text x="16" y="12" class="o_iso_colhead">Clause</text>
+                    <text x="520" y="12" class="o_iso_colhead">Mapped Odoo record (evidence)</text>
+                    <text x="880" y="12" class="o_iso_colhead">App</text>
+                    <g transform="translate(0,14)">
+                        <path t-foreach="this.state.layout.links" t-as="link" t-key="link.key" t-att-d="link.d"
+                              class="o_iso_link" t-att-class="'o_iso_link_' + link.type + (this.linkDim(link) ? ' dim' : '')" fill="none"/>
+                        <g t-foreach="this.state.layout.clauses" t-as="node" t-key="node.id"
+                           class="o_iso_node o_iso_clause" t-att-class="'o_iso_' + node.status + (this.isDim(node.id) ? ' dim' : '')"
+                           t-on-mouseenter="() => this.hoverNode(node.id)" t-on-mouseleave="() => this.hoverNode(null)"
+                           t-on-click="() => this.openNode(node)">
+                            <title><t t-out="node.label"/> <t t-out="node.title"/> — <t t-out="this.statusLabels[node.status] or node.status"/></title>
+                            <circle t-att-cx="node.x" t-att-cy="node.y" r="6" class="o_iso_mark"/>
+                            <text t-att-x="node.x + 12" t-att-y="node.y + 4" t-att-class="node.is_leaf ? '' : 'o_iso_heading'">
+                                <t t-out="node.label"/> <t t-out="this.clipLabel(node.title, node.is_leaf ? 38 : 30)"/>
+                            </text>
+                        </g>
+                        <g t-foreach="this.state.layout.evidence" t-as="node" t-key="node.id"
+                           class="o_iso_node o_iso_evidence" t-att-class="'o_iso_' + node.status + (this.isDim(node.id) ? ' dim' : '')"
+                           t-on-mouseenter="() => this.hoverNode(node.id)" t-on-mouseleave="() => this.hoverNode(null)"
+                           t-on-click="() => this.openNode(node)">
+                            <title><t t-out="node.label"/>&#10;<t t-out="node.title"/>&#10;Provider: <t t-out="node.provider"/> · Score <t t-out="node.score"/></title>
+                            <rect t-att-x="node.x - 6" t-att-y="node.y - 11" width="290" height="22" rx="4" class="o_iso_card"/>
+                            <text t-att-x="node.x + 4" t-att-y="node.y + 4">
+                                <t t-out="this.clipLabel(node.label, 34)"/>
+                            </text>
+                            <text t-att-x="node.x + 252" t-att-y="node.y + 4" text-anchor="end" class="o_iso_score"><t t-out="node.score"/></text>
+                            <text t-if="node.image_url" t-att-x="node.x + 264" t-att-y="node.y + 4" class="o_iso_shot">&#128247;</text>
+                        </g>
+                        <g t-foreach="this.state.layout.apps" t-as="node" t-key="node.id"
+                           class="o_iso_node o_iso_app" t-att-class="this.isDim(node.id) ? 'dim' : ''"
+                           t-on-mouseenter="() => this.hoverNode(node.id)" t-on-mouseleave="() => this.hoverNode(null)">
+                            <rect t-att-x="node.x - 6" t-att-y="node.y - 12" width="150" height="24" rx="12" class="o_iso_pill"/>
+                            <text t-att-x="node.x + 69" t-att-y="node.y + 4" text-anchor="middle"><t t-out="this.clipLabel(node.label, 20)"/></text>
+                        </g>
+                    </g>
+                </svg>
+                <p class="small text-muted mt-3 mb-0">Click a clause or evidence node to open it. Hover to highlight its connections. Screenshots are attached to each evidence record.</p>
+            </div>
+        </div>
+    </t>
+</templates>

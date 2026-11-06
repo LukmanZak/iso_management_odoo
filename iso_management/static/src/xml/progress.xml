@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="iso_management.ScanProgress">
+        <span class="d-inline-flex align-items-center gap-2 me-2" role="status" aria-live="polite">
+            <span class="badge" t-att-class="{'text-bg-warning': ['queued','running','capturing','empty'].includes(this.progress.state), 'text-bg-success': this.progress.state === 'done', 'text-bg-danger': ['partial','error'].includes(this.progress.state), 'text-bg-secondary': !this.progress.state}" t-out="this.progress.label || this.props.record.data[this.props.name]"/>
+            <small t-if="this.progress.state === 'capturing'" class="text-muted"><t t-out="this.progress.captured"/> captured, <t t-out="this.progress.waiting"/> waiting, <t t-out="this.progress.failed"/> failed</small>
+        </span>
+    </t>
+    <t t-name="iso_management.AppMenuProgress" t-inherit="web.NavBar.AppsMenu" t-inherit-mode="extension">
+        <xpath expr="//DropdownItem[@t-foreach='apps']" position="replace">
+            <DropdownItem t-foreach="apps" t-as="app" t-key="app.id" class="{ 'o_app': true, focus: this.menuService.getCurrentApp() === app, 'o_disabled_offline': !this._isAvailable(app) }" onSelected="() => this.onNavBarDropdownItemSelection(app)" attrs="{ href: this.getMenuItemHref(app), 'data-menu-xmlid': app.xmlid, 'data-section': app.id }">
+                <span t-out="app.name"/>
+                <span t-if="app.xmlid === 'iso_management.menu_iso_management_root' and this.isoProgress.running" class="badge text-bg-warning ms-2" role="status">Running <t t-out="this.isoProgress.running"/></span>
+            </DropdownItem>
+        </xpath>
+    </t>
+    <t t-name="iso_management.AppSidebarProgress" t-inherit="web.NavBar.AppsMenu.Sidebar" t-inherit-mode="extension">
+        <xpath expr="//t[@t-out='app.name']" position="after">
+            <span t-if="app.xmlid === 'iso_management.menu_iso_management_root' and this.isoProgress.running" class="badge text-bg-warning ms-2" role="status">Running <t t-out="this.isoProgress.running"/></span>
+        </xpath>
+    </t>
+</templates>

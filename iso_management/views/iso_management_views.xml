@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_iso_standard_list" model="ir.ui.view">
+        <field name="name">iso.management.standard.list</field>
+        <field name="model">iso.management.standard</field>
+        <field name="arch" type="xml"><list><field name="name"/><field name="covered_count"/><field name="partial_count"/><field name="gap_count"/><field name="unscanned_count"/><field name="company_id" groups="base.group_multi_company"/></list></field>
+    </record>
+    <record id="view_iso_standard_form" model="ir.ui.view">
+        <field name="name">iso.management.standard.form</field>
+        <field name="model">iso.management.standard</field>
+        <field name="arch" type="xml">
+            <form string="Standard edition">
+                <header>
+                    <button name="action_run_all" type="object" string="Auto-detect all clauses" class="btn-primary" icon="fa-search" groups="base.group_user"/>
+                    <button name="action_open_graph" type="object" string="Open graph" icon="fa-share-alt"/>
+                    <button name="action_run_all_rag" type="object" string="Re-run all with RAG" icon="fa-magic"/>
+                    <button name="action_reindex" type="object" string="Index records for RAG" icon="fa-database"/>
+                </header>
+                <sheet>
+                <div class="oe_title"><h1><field name="name"/></h1></div>
+                <group>
+                    <group><field name="company_id" groups="base.group_multi_company"/><field name="official_url" widget="url"/></group>
+                    <group string="Coverage">
+                        <field name="covered_count"/><field name="partial_count"/><field name="gap_count"/><field name="unscanned_count"/>
+                    </group>
+                </group>
+                <notebook>
+                    <page string="Clauses" name="clauses">
+                        <p class="text-muted">Auto-detect maps each clause to real Odoo records and queues screenshots as evidence. Open the graph to see how clauses connect to records.</p>
+                        <field name="clause_ids" readonly="1">
+                            <list create="false" edit="false" delete="false" default_order="catalog_sequence" limit="200">
+                                <field name="catalog_sequence" column_invisible="True"/><field name="clause_number"/><field name="clause_title"/><field name="parent_id" optional="hide"/>
+                                <field name="mapped_count"/>
+                                <field name="coverage_status" widget="badge" decoration-success="coverage_status == 'covered'" decoration-warning="coverage_status == 'partial'" decoration-danger="coverage_status == 'gap'" decoration-muted="coverage_status in ('unscanned', 'group')"/>
+                            </list>
+                        </field>
+                    </page>
+                    <page string="RAG &amp; AI" name="rag">
+                        <div class="alert alert-info" role="status">Retrieval-augmented detection embeds Odoo record titles into a pgvector index, retrieves the passages closest to each clause, and lets an LLM judge relevance. Configure it in <code>.env</code> (see <code>.env.example</code>). Every result is labelled with the provider that produced it.</div>
+                        <field name="rag_ready" invisible="1"/>
+                        <group>
+                            <field name="rag_info" nolabel="1" colspan="2" readonly="1"/>
+                            <field name="chunk_count"/>
+                        </group>
+                    </page>
+                </notebook>
+            </sheet></form>
+        </field>
+    </record>
+    <record id="action_iso_standard" model="ir.actions.act_window">
+        <field name="name">Standards</field><field name="res_model">iso.management.standard</field><field name="view_mode">list,form</field>
+    </record>
+    <record id="view_iso_management_clause_list" model="ir.ui.view">
+        <field name="name">iso.management.clause.list</field>
+        <field name="model">iso.management.clause</field>
+        <field name="arch" type="xml">
+            <list string="ISO Clauses" decoration-muted="not active">
+                <field name="name"/>
+                <field name="edition"/>
+                <field name="clause_number"/>
+                <field name="clause_title"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="mapped_count"/>
+                <field name="coverage_status" widget="badge" decoration-success="coverage_status == 'covered'" decoration-warning="coverage_status == 'partial'" decoration-danger="coverage_status == 'gap'" decoration-muted="coverage_status in ('unscanned', 'group')"/>
+                <field name="scan_count"/>
+                <field name="latest_scan_status"/>
+                <field name="active" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_iso_management_clause_search" model="ir.ui.view">
+        <field name="name">iso.management.clause.search</field>
+        <field name="model">iso.management.clause</field>
+        <field name="arch" type="xml">
+            <search string="ISO Clauses">
+                <field name="clause_number"/>
+                <field name="clause_title"/>
+                <field name="clause_detail"/>
+                <filter string="Archived" name="archived" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter string="Edition" name="group_edition" context="{'group_by': 'edition'}"/>
+                    <filter string="Company" name="group_company" context="{'group_by': 'company_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_iso_management_clause_form" model="ir.ui.view">
+        <field name="name">iso.management.clause.form</field>
+        <field name="model">iso.management.clause</field>
+        <field name="arch" type="xml">
+            <form string="ISO Clause">
+                <header>
+                    <button name="action_run_detection" type="object" string="Auto-detect" class="btn-primary" icon="fa-search" invisible="child_ids"/>
+                    <button name="action_run_rag_detection" type="object" string="Re-run with RAG" icon="fa-magic" invisible="child_ids"/>
+                    <field name="child_ids" invisible="1"/>
+                    <field name="active" widget="boolean_toggle"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="clause_title"/>
+                        <h1><field name="clause_title" placeholder="Clause title"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="standard"/>
+                            <field name="edition"/>
+                            <field name="clause_number"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="scan_count" readonly="1"/>
+                            <field name="coverage_status" widget="badge" decoration-success="coverage_status == 'covered'" decoration-warning="coverage_status == 'partial'" decoration-danger="coverage_status == 'gap'" decoration-muted="coverage_status in ('unscanned', 'group')"/>
+                            <field name="mapped_count"/>
+                            <field name="latest_scan_status" readonly="1" widget="badge" decoration-warning="latest_scan_status in ('potential_evidence', 'needs_review')" decoration-danger="latest_scan_status == 'error'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Clause detail" name="clause_detail">
+                            <separator string="Understanding this clause"/>
+                            <field name="practical_guidance" nolabel="1" readonly="1"/>
+                            <separator string="Examples of records to review"/>
+                            <field name="suggested_evidence" nolabel="1" readonly="1"/>
+                            <separator string="Your organization's interpretation"/>
+                            <field name="clause_detail" placeholder="Enter the applicable detail or your organization's interpretation from your licensed copy. The standard text is not preloaded."/>
+                            <separator string="Topics (extra context for RAG)"/>
+                            <field name="search_keywords"/>
+                        </page>
+                        <page string="RAG &amp; AI" name="rag_ai">
+                            <field name="rag_info" nolabel="1" readonly="1"/>
+                            <div class="alert alert-info" role="alert">
+                                Auto-detect maps this clause to live Odoo records using curated rules. With RAG configured, the same button can retrieve and judge records with embeddings and an LLM. Results are candidates for human review, not an ISO compliance decision. Sensitive HR, biometric, authentication, user, and partner data are excluded.
+                            </div>
+                        </page>
+                        <page string="Detection runs" name="detection_runs">
+                            <field name="scan_ids" readonly="1">
+                                <list create="false" edit="false" delete="false">
+                                    <field name="scan_date"/>
+                                    <field name="status" widget="badge" decoration-warning="status in ('potential_evidence', 'needs_review')" decoration-danger="status == 'error'"/>
+                                    <field name="provider"/>
+                                    <field name="app_count"/>
+                                    <field name="model_count"/>
+                                    <field name="matched_record_count"/>
+                                    <field name="summary" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_iso_management_scan_list" model="ir.ui.view">
+        <field name="name">iso.management.scan.list</field>
+        <field name="model">iso.management.scan</field>
+        <field name="arch" type="xml">
+            <list string="Detection Runs">
+                <field name="scan_date"/>
+                <field name="clause_id"/>
+                <field name="progress_state" widget="badge"/>
+                <field name="status" widget="badge" decoration-warning="status in ('potential_evidence', 'needs_review')" decoration-danger="status == 'error'"/>
+                <field name="capture_counts" string="Screenshots"/>
+                <field name="provider" optional="show"/>
+                <field name="app_count" optional="hide"/>
+                <field name="model_count" optional="hide"/>
+                <field name="matched_record_count" string="Matches"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_iso_management_scan_search" model="ir.ui.view">
+        <field name="name">iso.management.scan.search</field>
+        <field name="model">iso.management.scan</field>
+        <field name="arch" type="xml">
+            <search string="Detection Runs">
+                <field name="name"/>
+                <field name="clause_id"/>
+                <filter string="Needs review" name="needs_review" domain="[('status', '=', 'needs_review')]"/>
+                <filter string="Potential evidence" name="potential" domain="[('status', '=', 'potential_evidence')]"/>
+                <filter string="Scan errors" name="errors" domain="[('status', '=', 'error')]"/>
+                <group>
+                    <filter string="Clause" name="group_clause" context="{'group_by': 'clause_id'}"/>
+                    <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_iso_management_scan_form" model="ir.ui.view">
+        <field name="name">iso.management.scan.form</field>
+        <field name="model">iso.management.scan</field>
+        <field name="arch" type="xml">
+            <form string="ISO Detection Run">
+                <header>
+                    <button name="action_print_report" type="object" string="Print Evidence Report" class="btn-primary" icon="fa-print" invisible="execution_state in ('queued', 'running')"/>
+                    <field name="progress_state" widget="iso_scan_progress"/>
+                    <field name="status" widget="badge" decoration-warning="status in ('potential_evidence', 'needs_review')" decoration-danger="status == 'error'" invisible="execution_state in ('queued', 'running')"/>
+                </header>
+                <sheet>
+                    <field name="execution_state" invisible="1"/>
+                    <div class="oe_title"><h1><field name="name"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="clause_id"/>
+                            <field name="scan_date"/>
+                            <field name="completed_date"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="app_count"/>
+                            <field name="model_count"/>
+                            <field name="matched_record_count"/>
+                            <field name="capture_counts"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-warning" role="alert">
+                        Review each potential match and its source before using it as evidence. A scan does not establish conformity or certification.
+                    </div>
+                    <field name="detector_version" invisible="1"/>
+                    <field name="provider"/>
+                    <div class="alert alert-info" role="status" invisible="detector_version == '3'">This historical scan used earlier matching rules. Run a new scan from the clause to use the current rules.</div>
+                    <group>
+                        <field name="summary"/>
+                        <field name="explanation"/>
+                        <field name="scope_summary"/>
+                    </group>
+                    <notebook>
+                        <page string="Evidence" name="evidence">
+                            <field name="candidate_ids" readonly="1">
+                                <list create="false" edit="false" delete="false">
+                                    <field name="name"/>
+                                    <field name="evidence_type"/>
+                                    <field name="source_app"/>
+                                    <field name="source_model"/>
+                                    <field name="provider"/>
+                                    <field name="rule_strength"/>
+                                    <field name="source_record_name" optional="hide"/>
+                                    <field name="relevance_score"/>
+                                    <field name="source_page_url" string="Captured page" widget="url" optional="hide"/>
+                                    <field name="source_url" widget="url" optional="hide"/>
+                                    <field name="capture_status" widget="badge" decoration-success="capture_status == 'captured'" decoration-warning="capture_status in ('pending', 'capturing')" decoration-danger="capture_status == 'failed'"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Scan context" name="scan_context">
+                            <p class="text-muted">These counts and structural observations provide context for the scan.</p>
+                            <field name="context_ids" readonly="1">
+                                <list create="false" edit="false" delete="false"><field name="name"/><field name="evidence_type"/><field name="source_app"/><field name="record_count"/><field name="excerpt"/></list>
+                            </field>
+                        </page>
+                        <page string="App screenshots" name="app_screenshots">
+                            <div class="alert alert-info" role="status">These are example pages from installed apps. They provide context and are not clause matches or proof of compliance.</div>
+                            <p class="text-muted">Open a row to view its full-page screenshot and source link.</p>
+                            <field name="context_screenshot_ids" readonly="1">
+                                <list create="false" edit="false" delete="false">
+                                    <field name="source_app"/><field name="source_record_name"/><field name="source_page_name" optional="hide"/>
+                                    <field name="source_page_url" string="Page in screenshot" widget="url" optional="hide"/>
+                                    <field name="capture_status" widget="badge" decoration-success="capture_status == 'captured'" decoration-warning="capture_status in ('pending', 'capturing')" decoration-danger="capture_status == 'failed'"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Additional attachment" name="screenshot">
+                            <field name="screenshot" widget="image" filename="screenshot_filename" options="{'preview_image': 'screenshot'}"/>
+                            <field name="screenshot_filename" invisible="1"/>
+                            <div class="text-muted">Add an optional supporting image for this scan. Source screenshots appear on individual evidence records.</div>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_iso_management_evidence_list" model="ir.ui.view">
+        <field name="name">iso.management.evidence.list</field>
+        <field name="model">iso.management.evidence</field>
+        <field name="arch" type="xml">
+            <list string="Evidence" create="false" edit="false" delete="false">
+                <field name="name"/>
+                <field name="scan_id"/>
+                <field name="evidence_type"/>
+                <field name="provider"/>
+                <field name="rule_strength"/>
+                <field name="source_app"/>
+                <field name="source_model"/>
+                <field name="source_record_name" optional="hide"/>
+                <field name="relevance_score"/>
+                <field name="source_page_url" string="Captured page" widget="url" optional="hide"/>
+                <field name="source_url" widget="url"/>
+                <field name="capture_status" widget="badge" decoration-success="capture_status == 'captured'" decoration-warning="capture_status in ('pending', 'capturing')" decoration-danger="capture_status == 'failed'"/>
+                <field name="record_count"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_iso_management_evidence_form" model="ir.ui.view">
+        <field name="name">iso.management.evidence.form</field>
+        <field name="model">iso.management.evidence</field>
+        <field name="arch" type="xml">
+            <form string="Evidence" create="false" edit="false" delete="false">
+                <header><button name="action_retry_capture" type="object" string="Retry screenshot" invisible="capture_status not in ('failed', 'captured')"/></header>
+                <sheet>
+                    <div class="oe_title"><h1><field name="name"/></h1></div>
+                    <group>
+                        <group string="Source">
+                            <field name="scan_id"/><field name="evidence_type"/><field name="source_app"/>
+                            <field name="source_record_name"/><field name="source_model"/><field name="source_record_id"/>
+                            <field name="source_url" string="Original record" widget="url"/>
+                        </group>
+                        <group string="Screenshot">
+                            <field name="capture_status" widget="badge" decoration-success="capture_status == 'captured'" decoration-warning="capture_status in ('pending', 'capturing')" decoration-danger="capture_status == 'failed'"/>
+                            <field name="capture_error" invisible="not capture_error"/><field name="captured_at" invisible="not captured_at"/>
+                            <field name="source_page_name" invisible="not source_page_name"/>
+                            <field name="source_page_url" string="Page in screenshot" widget="url"/>
+                        </group>
+                    </group>
+                    <div class="row">
+                        <div class="col-12 col-lg-5 pe-lg-4">
+                            <separator string="About this record"/>
+                            <div class="alert alert-info" role="status" invisible="evidence_type != 'operational_context'">Example app record for context. This record was not selected as a clause match.</div>
+                            <group invisible="evidence_type not in ('keyword_match', 'rule_match')"><field name="provider"/><field name="rule_strength" invisible="not rule_strength"/><field name="source_field" invisible="not source_field"/><field name="matched_terms" invisible="not matched_terms"/><field name="relevance_score"/></group>
+                            <label for="excerpt" string="Details"/><field name="excerpt"/>
+                            <label for="match_reason"/><field name="match_reason"/>
+                        </div>
+                        <div class="col-12 col-lg-7">
+                            <separator string="Source page screenshot"/>
+                            <field name="screenshot_is_original" invisible="1"/>
+                            <div class="alert alert-info" role="status" invisible="not screenshot or screenshot_is_original">This older screenshot may include a highlight or annotation. Retry to capture a fresh page.</div>
+                            <field name="screenshot" widget="image" invisible="not screenshot"/>
+                        </div>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_iso_management_clause" model="ir.actions.act_window">
+        <field name="name">Clauses</field>
+        <field name="res_model">iso.management.clause</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_iso_management_clause_search"/>
+    </record>
+    <record id="action_iso_management_scan" model="ir.actions.act_window">
+        <field name="name">Detection Runs</field>
+        <field name="res_model">iso.management.scan</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_iso_management_scan_search"/>
+    </record>
+    <record id="action_iso_management_evidence" model="ir.actions.act_window">
+        <field name="name">Evidence</field>
+        <field name="res_model">iso.management.evidence</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_iso_graph" model="ir.actions.client">
+        <field name="name">ISO Graph</field>
+        <field name="tag">iso_graph</field>
+    </record>
+
+    <menuitem id="menu_iso_management_root" name="ISO Management" sequence="45" groups="base.group_user" web_icon="iso_management,static/description/icon.svg"/>
+    <menuitem id="menu_iso_management_standards" name="Standards" parent="menu_iso_management_root" action="action_iso_standard" sequence="5" groups="base.group_user"/>
+    <menuitem id="menu_iso_management_graph" name="Graph" parent="menu_iso_management_root" action="action_iso_graph" sequence="7" groups="base.group_user"/>
+    <menuitem id="menu_iso_management_clauses" name="Clauses" parent="menu_iso_management_root" action="action_iso_management_clause" sequence="10" groups="base.group_user"/>
+    <menuitem id="menu_iso_management_scans" name="Detection Runs" parent="menu_iso_management_root" action="action_iso_management_scan" sequence="20" groups="base.group_user"/>
+    <menuitem id="menu_iso_management_evidence" name="Evidence" parent="menu_iso_management_root" action="action_iso_management_evidence" sequence="30" groups="base.group_user"/>
+</odoo>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="action_report_iso_scan" model="ir.actions.report">
+        <field name="name">ISO Evidence Review</field>
+        <field name="model">iso.management.scan</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">iso_management.report_iso_scan</field>
+        <field name="binding_model_id" ref="model_iso_management_scan"/>
+        <field name="binding_type">report</field>
+        <field name="print_report_name">'ISO Evidence - %s' % (object.name)</field>
+    </record>
+
+    <template id="report_iso_scan">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>ISO Management - Evidence Review</h2>
+                        <p><strong>Clause:</strong> <span t-field="o.clause_id.name"/></p>
+                        <p><strong>Scan date:</strong> <span t-field="o.scan_date"/></p>
+                        <p><strong>Status:</strong> <span t-field="o.status"/></p>
+                        <p t-if="not o.detector_version">This historical scan used earlier matching rules. Run a new scan to use the current rules.</p>
+                        <p><strong>Summary:</strong> <span t-field="o.summary"/></p>
+                        <p><strong>Explanation:</strong> <span t-field="o.explanation"/></p>
+                        <p><strong>Scope:</strong> <span t-field="o.scope_summary"/></p>
+                        <h3>Evidence candidates and context</h3>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Item</th><th>Type</th><th>Source</th><th>Count</th><th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="o.evidence_ids" t-as="ev">
+                                    <td><span t-field="ev.name"/></td>
+                                    <td><span t-field="ev.evidence_type"/></td>
+                                    <td><span t-out="(ev.source_app or '') + (' / ' if ev.source_app and ev.source_model else '') + (ev.source_model or '')"/></td>
+                                    <td><span t-field="ev.record_count"/></td>
+                                    <td>
+                                        <p t-if="ev.excerpt"><strong>Matched text:</strong> <span t-field="ev.excerpt"/></p>
+                                        <p t-if="ev.match_reason"><strong>Why selected:</strong> <span t-field="ev.match_reason"/></p>
+                                        <p><strong>Screenshot status:</strong> <span t-field="ev.capture_status"/></p>
+                                        <p t-if="ev.capture_error"><strong>Capture detail:</strong> <span t-field="ev.capture_error"/></p>
+                                        <p t-if="ev.screenshot and not ev.screenshot_is_original">Older screenshot: may include a highlight or annotation.</p>
+                                        <a t-if="ev.source_page_url" t-att-href="ev.source_page_url">Open the Odoo page shown in the screenshot</a><br t-if="ev.source_page_url"/>
+                                        <a t-if="ev.source_url" t-att-href="ev.source_url">Open original source record</a>
+                                        <br t-if="ev.screenshot"/><img t-if="ev.screenshot" t-att-src="image_data_uri(ev.screenshot)" style="max-width: 100%; max-height: 420px;"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="text-muted">This is a keyword-based review aid. Potential matches require human validation and do not establish conformity or certification.</p>
+                        <div t-if="o.screenshot" class="mt-3">
+                            <h3>Attached screenshot</h3>
+                            <img t-att-src="image_data_uri(o.screenshot)" style="max-width: 100%; max-height: 400px;"/>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
