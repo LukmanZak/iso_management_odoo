@@ -14,6 +14,33 @@ lengkap dengan screenshot sebagai bukti dan graph relasi.
 - **RAG + AI (opsional)**: embedding ke pgvector lalu dinilai LLM. Mati secara default.
   Setiap evidence diberi label provider yang menghasilkannya.
 
+## Tampilan
+
+**Graph** — klausul (kiri), evidence (tengah), dan aplikasi sumbernya (kanan). Titik hijau berarti tercakup,
+kuning sebagian, merah celah. Klik node untuk membuka klausul atau evidence, arahkan kursor untuk menyorot
+koneksinya. Contoh di bawah memakai filter *Partial*:
+
+![Graph klausul ke evidence ke aplikasi (filter Partial)](docs/screenshots/graph-partial.png)
+
+Filter *Gap* menampilkan klausul yang belum punya bukti, jadi celahnya langsung terlihat:
+
+![Graph dengan filter Gap](docs/screenshots/graph-gap.png)
+
+**Standards** — ringkasan cakupan per standar:
+
+![Daftar Standards dengan ringkasan cakupan](docs/screenshots/standards.png)
+
+**Klausul** — tombol *Auto-detect*, status cakupan, dan jumlah record yang terpetakan:
+
+![Form klausul 8.1 dengan tombol Auto-detect](docs/screenshots/clause.png)
+
+**Evidence** — alasan terpilih, nilai kecocokan, provider (aturan atau RAG + AI), tautan ke record asli,
+dan screenshot halaman sumbernya:
+
+![Form evidence dengan screenshot halaman sumber](docs/screenshots/evidence.png)
+
+> Screenshot diambil dari data demo Odoo.
+
 ## Instalasi
 1. Salin folder `iso_management/` ke addons path Odoo, lalu install dari Apps (atau `-i iso_management`).
 2. Butuh PostgreSQL dengan ekstensi `pgvector` hanya jika memakai RAG (mis. image `pgvector/pgvector:pg17`)
