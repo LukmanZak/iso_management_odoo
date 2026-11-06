@@ -1,10 +1,10 @@
 # ISO Management untuk Odoo 20
 
-Modul Odoo 20 untuk memetakan klausul **ISO 14001:2015** ke dokumen dan kegiatan nyata di Odoo,
+Modul Odoo 20 untuk memetakan klausul dummy **ISO** ke dokumen dan kegiatan nyata di Odoo,
 lengkap dengan screenshot sebagai bukti dan graph relasi.
 
 ## Fitur
-- **Katalog klausul** ISO 14001:2015 (klausul 4-10, 45 klausul). Ringkasan berupa parafrase;
+- **Katalog klausul** ISO (klausul 4-10, 45 klausul). Ringkasan berupa parafrase;
   teks resmi ISO tidak disertakan.
 - **Auto-detect**: setiap klausul dihubungkan ke record Odoo lewat aturan terkurasi
   (`iso_management/models/iso_rules.py`), misalnya 8.1 ke pembelian dan transfer stok, 6.1.2 ke
@@ -70,5 +70,5 @@ odoo -d <db> -u iso_management --test-tags /iso_management --stop-after-init
 
 ## Catatan
 - Aturan mapping dan judul klausul ditulis dari pengetahuan standar; cocokkan dengan salinan resmi
-  ISO 14001:2015 milikmu sebelum dipakai untuk audit.
+  ISO milikmu sebelum dipakai untuk audit.
 - Hasil deteksi adalah kandidat untuk ditinjau manusia, bukan keputusan kesesuaian ISO.
